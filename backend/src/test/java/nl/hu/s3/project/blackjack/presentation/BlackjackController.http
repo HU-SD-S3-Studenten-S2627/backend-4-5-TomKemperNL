@@ -1,0 +1,41 @@
+POST http://localhost:8080/login
+Content-Type: application/json
+
+{
+  "username": "freezeybob",
+  "password": "freezeybobpwd"
+}
+
+> {%
+    const json = response.body;
+    client.global.set("jwt", json.token);
+%}
+###
+POST http://localhost:8080/blackjack/games
+Content-Type: application/json
+Authorization: Bearer {{jwt}}
+
+{
+  "bet": 100
+}
+
+###
+
+POST http://localhost:8080/blackjack/games/1
+Content-Type: text/plain
+Authorization: Bearer {{jwt}}
+
+Hit
+
+###
+
+POST http://localhost:8080/blackjack/games/1
+Content-Type: text/plain
+Authorization: Bearer {{jwt}}
+
+Stand
+
+###
+
+GET http://localhost:8080/blackjack/games/1
+Authorization: Bearer {{jwt}}

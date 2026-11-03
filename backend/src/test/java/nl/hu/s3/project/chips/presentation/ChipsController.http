@@ -1,0 +1,33 @@
+POST http://localhost:8080/login
+Content-Type: application/json
+
+{
+  "username": "freezeybob",
+  "password": "freezeybobpwd"
+}
+
+> {%
+    const json = response.body;
+    client.global.set("jwt", json.token);
+%}
+###
+GET http://localhost:8080/chips/balance
+Authorization: Bearer {{jwt}}
+
+###
+POST http://localhost:8080/chips/deposit
+Content-Type: application/json
+Authorization: Bearer {{jwt}}
+
+{
+  "amount": 50
+}
+
+###
+POST http://localhost:8080/chips/withdrawal
+Authorization: Bearer {{jwt}}
+Content-Type: application/json
+
+{
+  "amount": 50
+}
