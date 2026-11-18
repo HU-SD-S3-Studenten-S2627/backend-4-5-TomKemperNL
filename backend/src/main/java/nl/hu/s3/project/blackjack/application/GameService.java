@@ -1,6 +1,7 @@
 package nl.hu.s3.project.blackjack.application;
 
 import jakarta.transaction.Transactional;
+import nl.hu.s3.project.blackjack.domain.Card;
 import nl.hu.s3.project.blackjack.domain.Game;
 import nl.hu.s3.project.blackjack.data.GameRepository;
 import nl.hu.s3.project.blackjack.presentation.GameResponse;
@@ -60,11 +61,11 @@ public class GameService {
     private GameResponse response(Game game) {
         // Translate the internal numeric representation into human-readable card names.
         List<String> player = new ArrayList<>();
-        for (Integer card : game.getPlayerCards()) {
+        for (Card card : game.getPlayerCards()) {
             player.add(cardName(card));
         }
         List<String> dealer = new ArrayList<>();
-        for (Integer card : game.getDealerCards()) {
+        for (Card card : game.getDealerCards()) {
             dealer.add(cardName(card));
         }
         if (!game.isFinished()) {
@@ -74,7 +75,7 @@ public class GameService {
         return new GameResponse(game.getId(), player, dealer, game.getBet(), game.getResult());
     }
 
-    private static String cardName(int card) {
+    private static String cardName(Card card) {
         String suit = switch ((card - 1) / 13) {
             case 0 -> "H";
             case 1 -> "S";
@@ -94,6 +95,9 @@ public class GameService {
     }
 
     public void delete(String name, Long id) {
+        //oepsie, vergeten vorige oefening;)
+        Game g = this.games.findUsersGame(id, name);
+        this.games.delete(g);
     }
 
     public GameResponse createGame(String name, int bet) {

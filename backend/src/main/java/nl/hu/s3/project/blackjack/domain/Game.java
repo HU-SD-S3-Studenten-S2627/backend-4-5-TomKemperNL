@@ -23,13 +23,13 @@ public class Game {
     private Player player;
 
     @Convert(converter = CSVPersister.class)
-    private List<Integer> playerCards;
+    private List<Card> playerCards;
 
     @Convert(converter = CSVPersister.class)
-    private List<Integer> dealerCards;
+    private List<Card> dealerCards;
 
     @Convert(converter = CSVPersister.class)
-    private List<Integer> deck;
+    private List<Card> deck;
 
     private int bet;
     private String result;
@@ -61,7 +61,7 @@ public class Game {
     }
 
 
-    private void addPlayerCard(int card) {
+    private void addPlayerCard(Card card) {
         this.getPlayerCards().add(card);
 
         int rank = ((card - 1) % 13) + 1;
@@ -74,12 +74,12 @@ public class Game {
         this.setPlayerValue(this.getPlayerValue() + cardValue);
     }
 
-    private void addDealerCard(int card) {
+    private void addDealerCard(Card card) {
         this.getDealerCards().add(card);
 
     }
 
-    private int takeCard() {
+    private Card takeCard() {
         return this.getDeck().removeFirst();
     }
 
@@ -92,32 +92,16 @@ public class Game {
         return player;
     }
 
-    public void setPlayer(Player player) {
-        this.player = player;
-    }
-
-    public List<Integer> getPlayerCards() {
+    public List<Card> getPlayerCards() {
         return playerCards;
     }
 
-    public void setPlayerCards(List<Integer> playerCards) {
-        this.playerCards = playerCards;
-    }
-
-    public List<Integer> getDealerCards() {
+    public List<Card> getDealerCards() {
         return dealerCards;
     }
 
-    public void setDealerCards(List<Integer> dealerCards) {
-        this.dealerCards = dealerCards;
-    }
-
-    public List<Integer> getDeck() {
+    public List<Card> getDeck() {
         return deck;
-    }
-
-    public void setDeck(List<Integer> deck) {
-        this.deck = deck;
     }
 
     public int getBet() {
