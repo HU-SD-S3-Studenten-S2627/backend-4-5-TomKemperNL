@@ -8,10 +8,13 @@ import jakarta.persistence.ManyToOne;
 import nl.hu.s3.project.blackjack.data.CSVPersister;
 import nl.hu.s3.project.lobby.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 public class Game {
+    public static final String PLAYING = "Playing";
+
     @Id
     @GeneratedValue
     private Long id;
@@ -33,15 +36,56 @@ public class Game {
 
     private int playerValue;
 
-    public Game() {
+    protected Game() {
     }
+
+    public Game(Player player, int bet){
+
+        this.setPlayer(player);
+        this.setPlayerCards(new ArrayList<>());
+        this.setDealerCards(new ArrayList<>());
+        this.setDeck(new ArrayList<>(deck));
+        this.setBet(bet);
+        this.setResult(PLAYING);
+        this.setPlayerValue(0);
+
+        addPlayerCard(takeCard());
+        addPlayerCard(takeCard());
+        addDealerCard(takeCard());
+        addDealerCard(takeCard());
+
+        if (this.getPlayerValue() == 21) {
+            this.setResult("Blackjack");
+        }
+
+    }
+
+
+    private void addPlayerCard(int card) {
+        this.getPlayerCards().add(card);
+
+        int rank = ((card - 1) % 13) + 1;
+        int cardValue;
+        if (rank == 1) {
+            cardValue = this.getPlayerValue() + 11 > 21 ? 1 : 11;
+        } else {
+            cardValue = Math.min(rank, 10);
+        }
+        this.setPlayerValue(this.getPlayerValue() + cardValue);
+    }
+
+    private void addDealerCard(int card) {
+        this.getDealerCards().add(card);
+
+    }
+
+    private int takeCard() {
+        return this.getDeck().removeFirst();
+    }
+
 
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public Player getPlayer() {

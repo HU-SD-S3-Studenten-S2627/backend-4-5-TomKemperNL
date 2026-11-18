@@ -16,11 +16,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+import static nl.hu.s3.project.blackjack.domain.Game.PLAYING;
+
 @Service
 @Transactional
 public class GameService {
 
-    public static final String PLAYING = "Playing";
+
     public static final String CARD_SEPARATOR = ",";
     public static final String HIDDEN_CARD = "**";
 
@@ -178,24 +180,7 @@ public class GameService {
         }
 
 
-        Game game = new Game();
-        game.setPlayer(player);
-        game.setPlayerCards(new ArrayList<>());
-        game.setDealerCards(new ArrayList<>());
-        game.setDeck(new ArrayList<>(deck));
-        game.setBet(bet);
-        game.setResult(PLAYING);
-        game.setPlayerValue(0);
-
-        addPlayerCard(game, takeCard(game));
-        addPlayerCard(game, takeCard(game));
-        addDealerCard(game, takeCard(game));
-        addDealerCard(game, takeCard(game));
-
-        if (game.getPlayerValue() == 21) {
-            game.setResult("Blackjack");
-        }
-
+        Game game = new Game(player, bet);
         this.games.save(game);
         return response(game);
     }
