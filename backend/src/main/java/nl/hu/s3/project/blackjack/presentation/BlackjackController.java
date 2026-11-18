@@ -2,7 +2,6 @@ package nl.hu.s3.project.blackjack.presentation;
 
 import jakarta.transaction.Transactional;
 import nl.hu.s3.project.blackjack.application.GameService;
-import nl.hu.s3.project.blackjack.data.GameRepository;
 import nl.hu.s3.project.blackjack.domain.Game;
 import nl.hu.s3.project.chips.ChipsController;
 import nl.hu.s3.project.lobby.Player;
@@ -35,19 +34,14 @@ import java.util.*;
  * to provide a complete and user-friendly Blackjack experience.
  */
 public class BlackjackController {
-    public static final String PLAYING = "Playing";
-    public static final String CARD_SEPARATOR = ",";
-    public static final String HIDDEN_CARD = "**";
 
-    private final GameRepository games;
     private final GameService gameService;
     private final PlayerRepository players;
     private final ChipsController chips;
 
     private Random random = new Random();
 
-    public BlackjackController(GameRepository games, GameService gameService, PlayerRepository players, ChipsController chips) {
-        this.games = games;
+    public BlackjackController(GameService gameService, PlayerRepository players, ChipsController chips) {
         this.gameService = gameService;
         this.players = players;
         this.chips = chips;
@@ -60,12 +54,7 @@ public class BlackjackController {
 
     @GetMapping("/games")
     public List<GameResponse> getAllGames(Authentication authentication) {
-        // Convert all games owned by the current user to safe response objects.
-        List<GameResponse> result = new ArrayList<>();
-        for (Game game : games.findByUsername(authentication.getName())) {
-            result.add(response(game));
-        }
-        return result;
+        return this.gameService.listGames(authentication.getName());
     }
 
     @GetMapping("/games/{id}")
@@ -166,42 +155,6 @@ public class BlackjackController {
             case "Won" -> bet * 2;
             default -> 0;
         };
-    }
-
-    private GameResponse response(Game game) {
-        // Translate the internal numeric representation into human-readable card names.
-        List<String> player = new ArrayList<>();
-        for (Integer card : game.getPlayerCards()) {
-            player.add(cardName(card));
-        }
-        List<String> dealer = new ArrayList<>();
-        for (Integer card : game.getDealerCards()) {
-            dealer.add(cardName(card));
-        }
-        if (!gameService.isFinished(game)) {
-            // Hide the dealer's hole card while the game is still active.
-            dealer.set(0, HIDDEN_CARD);
-        }
-        return new GameResponse(game.getId(), player, dealer, game.getBet(), game.getResult());
-    }
-
-    private static String cardName(int card) {
-        String suit = switch ((card - 1) / 13) {
-            case 0 -> "H";
-            case 1 -> "S";
-            case 2 -> "D";
-            default -> "C";
-        };
-        int rank = ((card - 1) % 13) + 1;
-        String rankName = switch (rank) {
-            case 1 -> "A";
-            case 10 -> "X";
-            case 11 -> "J";
-            case 12 -> "Q";
-            case 13 -> "K";
-            default -> Integer.toString(rank);
-        };
-        return suit + rankName;
     }
 
     public Random getRandom() {
