@@ -74,22 +74,7 @@ public class GameService {
     }
 
     private static String cardName(Card card) {
-        String suit = switch ((card - 1) / 13) {
-            case 0 -> "H";
-            case 1 -> "S";
-            case 2 -> "D";
-            default -> "C";
-        };
-        int rank = ((card - 1) % 13) + 1;
-        String rankName = switch (rank) {
-            case 1 -> "A";
-            case 10 -> "X";
-            case 11 -> "J";
-            case 12 -> "Q";
-            case 13 -> "K";
-            default -> Integer.toString(rank);
-        };
-        return suit + rankName;
+        return card.toString();
     }
 
     public void delete(String name, Long id) {

@@ -58,4 +58,14 @@ public class Card {
     public Suit getSuit() {
         return suit;
     }
+
+    public static List<Card> deck(){
+        List<Card> result = new ArrayList<>();
+        for(Suit s: Suit.values()){
+            for(Rank r: Rank.values()){
+                result.add(new Card(s,r));
+            }
+        }
+        return result;
+    }
 }

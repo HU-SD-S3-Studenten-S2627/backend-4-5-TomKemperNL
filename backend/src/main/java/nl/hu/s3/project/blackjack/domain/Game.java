@@ -43,17 +43,14 @@ public class Game {
 
     public Game(Player player, int bet){
         // Construct a standard deck containing all 52 unique card identifiers.
-        List<Integer> deck = new ArrayList<>();
-        for (int card = 1; card <= 52; card++) {
-            deck.add(card);
-        }
+        List<Card> deck = Card.deck();
         // Randomize the order to ensure a fair game experience.
         Collections.shuffle(deck);
 
-        this.setPlayer(player);
-        this.setPlayerCards(new ArrayList<>());
-        this.setDealerCards(new ArrayList<>());
-        this.setDeck(new ArrayList<>(deck));
+        this.player = player;
+        this.playerCards = new ArrayList<>();
+        this.dealerCards = new ArrayList<>();
+        this.deck = new ArrayList<>(deck);
         this.setBet(bet);
         this.setResult(PLAYING);
         this.setPlayerValue(0);
@@ -72,20 +69,11 @@ public class Game {
 
     private void addPlayerCard(Card card) {
         this.getPlayerCards().add(card);
-
-        int rank = ((card - 1) % 13) + 1;
-        int cardValue;
-        if (rank == 1) {
-            cardValue = this.getPlayerValue() + 11 > 21 ? 1 : 11;
-        } else {
-            cardValue = Math.min(rank, 10);
-        }
-        this.setPlayerValue(this.getPlayerValue() + cardValue);
+        this.setPlayerValue(this.getPlayerValue() + card.baseValue());
     }
 
     private void addDealerCard(Card card) {
         this.getDealerCards().add(card);
-
     }
 
     private Card takeCard() {
@@ -149,17 +137,15 @@ public class Game {
     public void stand() {
         makeSureGameIsStillRunning();
         int value = 0;
-        for (int card : this.getDealerCards()) {
-            int rank = ((card - 1) % 13) + 1;
-            value += rank == 1 ? 1 : Math.min(rank, 10);
+        for (Card card : this.getDealerCards()) {
+            value += card.baseValue();
         }
 
         // A dealer always stands on a hand value of 17.
         while (value < 17) {
-            int newCard = takeCard();
+            Card newCard = takeCard();
             addDealerCard(newCard);
-            int rank = ((newCard - 1) % 13) + 1;
-            value += rank == 1 ? 1 : Math.min(rank, 10);
+            value += newCard.baseValue();
         }
 
         int playerValue = this.getPlayerValue();
