@@ -5,6 +5,8 @@ import nl.hu.s3.project.blackjack.domain.Game;
 import nl.hu.s3.project.blackjack.data.GameRepository;
 import nl.hu.s3.project.blackjack.presentation.BlackjackController;
 import nl.hu.s3.project.blackjack.presentation.GameResponse;
+import nl.hu.s3.project.chips.ChipsAccount;
+import nl.hu.s3.project.chips.ChipsRepository;
 import nl.hu.s3.project.lobby.Player;
 import nl.hu.s3.project.lobby.PlayerRepository;
 import org.springframework.http.HttpStatus;
@@ -26,12 +28,14 @@ public class GameService {
 
     private GameRepository games;
     private final PlayerRepository players;
+    private final ChipsRepository chips;
 
     private Random random = new Random();
 
-    public GameService(GameRepository games, PlayerRepository players) {
+    public GameService(GameRepository games, PlayerRepository players, ChipsRepository chips) {
         this.games = games;
         this.players = players;
+        this.chips = chips;
     }
 
     private void hit(Game game) {
@@ -209,7 +213,8 @@ public class GameService {
             }
             case "DoubleDown" -> {
                 if (this.isFinished(game)) throw new RuntimeException("Game already finished");
-                chips.withdrawChips(username, (long) game.getBet());
+                ChipsAccount account =  chips.findByUsername(username);
+                account.withdraw((long) game.getBet());
                 game.setBet(game.getBet() * 2);
                 this.hit(game);
                 if (!this.isFinished(game)) {
