@@ -9,7 +9,9 @@ import nl.hu.s3.project.blackjack.data.CSVPersister;
 import nl.hu.s3.project.lobby.Player;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 @Entity
 public class Game {
@@ -40,6 +42,13 @@ public class Game {
     }
 
     public Game(Player player, int bet){
+        // Construct a standard deck containing all 52 unique card identifiers.
+        List<Integer> deck = new ArrayList<>();
+        for (int card = 1; card <= 52; card++) {
+            deck.add(card);
+        }
+        // Randomize the order to ensure a fair game experience.
+        Collections.shuffle(deck);
 
         this.setPlayer(player);
         this.setPlayerCards(new ArrayList<>());

@@ -30,8 +30,6 @@ public class GameService {
     private final PlayerRepository players;
     private final ChipsRepository chips;
 
-    private Random random = new Random();
-
     public GameService(GameRepository games, PlayerRepository players, ChipsRepository chips) {
         this.games = games;
         this.players = players;
@@ -166,19 +164,10 @@ public class GameService {
     }
 
     public GameResponse createGame(String name, int bet) {
-        // Construct a standard deck containing all 52 unique card identifiers.
-        List<Integer> deck = new ArrayList<>();
-        for (int card = 1; card <= 52; card++) {
-            deck.add(card);
-        }
-        // Randomize the order to ensure a fair game experience.
-        Collections.shuffle(deck, this.random);
-
         Player player = this.players.findById(name);
         if(player == null){
             throw new IllegalArgumentException("Player not found");
         }
-
 
         Game game = new Game(player, bet);
         this.games.save(game);
@@ -216,16 +205,6 @@ public class GameService {
 
     public GameResponse findUsersGame(String username, Long id) {
         return response(this.games.findUsersGame(id, username));
-    }
-
-
-
-    public Random getRandom() {
-        return random;
-    }
-
-    public void setRandom(Random random) {
-        this.random = random;
     }
 
     private static int calculatePayout(String result, int bet) {
