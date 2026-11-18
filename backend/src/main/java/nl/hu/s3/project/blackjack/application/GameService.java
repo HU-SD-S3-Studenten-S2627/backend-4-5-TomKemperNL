@@ -37,83 +37,14 @@ public class GameService {
         this.players = players;
         this.chips = chips;
     }
-
-    private void hit(Game game) {
-        makeSureGameIsStillRunning(game);
-        addPlayerCard(game, takeCard(game));
-        if (game.getPlayerValue() > 21) {
-            game.setResult("Bust");
-        }
-    }
-
-    private void dealerTurn(Game game) {
-        makeSureGameIsStillRunning(game);
-        int value = 0;
-        for (int card : game.getDealerCards()) {
-            int rank = ((card - 1) % 13) + 1;
-            value += rank == 1 ? 1 : Math.min(rank, 10);
-        }
-
-        // A dealer always stands on a hand value of 17.
-        while (value < 17) {
-            int newCard = takeCard(game);
-            addDealerCard(game, newCard);
-            int rank = ((newCard - 1) % 13) + 1;
-            value += rank == 1 ? 1 : Math.min(rank, 10);
-        }
-
-        int playerValue = game.getPlayerValue();
-        int dealerValue = value;
-        if (dealerValue > 21 || playerValue > dealerValue) {
-            game.setResult("Won");
-        }else if (playerValue == dealerValue) {
-            game.setResult("Push");
-        } else {
-            game.setResult("Lost");
-        }
-    }
-
     public int payout(String username, Long id) {
         Game game = this.games.findUsersGame(id, username);
         return calculatePayout(game.getResult(), game.getBet());
     }
 
-    private boolean isFinished(Game game) {
-        return !PLAYING.equals(game.getResult());
-    }
-
     public boolean isNew(String name, Long id) {
         Game game = this.games.findUsersGame(id, name);
         return game.getPlayerCards().size() == 2 && PLAYING.equals(game.getResult());
-    }
-
-
-    private void makeSureGameIsStillRunning(Game game) {
-        if (isFinished(game)) {
-            throw new RuntimeException("Game already finished");
-        }
-    }
-
-    private int takeCard(Game game) {
-        return game.getDeck().removeFirst();
-    }
-
-    private void addPlayerCard(Game game, int card) {
-        game.getPlayerCards().add(card);
-
-        int rank = ((card - 1) % 13) + 1;
-        int cardValue;
-        if (rank == 1) {
-            cardValue = game.getPlayerValue() + 11 > 21 ? 1 : 11;
-        } else {
-            cardValue = Math.min(rank, 10);
-        }
-        game.setPlayerValue(game.getPlayerValue() + cardValue);
-    }
-
-    private void addDealerCard(Game game, int card) {
-        game.getDealerCards().add(card);
-
     }
 
     public List<GameResponse> listGames(String name) {
@@ -136,7 +67,7 @@ public class GameService {
         for (Integer card : game.getDealerCards()) {
             dealer.add(cardName(card));
         }
-        if (!this.isFinished(game)) {
+        if (!game.isFinished()) {
             // Hide the dealer's hole card while the game is still active.
             dealer.set(0, HIDDEN_CARD);
         }
@@ -190,21 +121,21 @@ public class GameService {
         Game game = this.games.findUsersGame(id, username);
 
         switch (move) {
-            case "Hit" -> this.hit(game);
+            case "Hit" -> game.hit();
             case "Stand" -> {
-                this.dealerTurn(game);
+                game.stand();
             }
             case "DoubleDown" -> {
-                if (this.isFinished(game)) throw new RuntimeException("Game already finished");
+                if (game.isFinished()) throw new RuntimeException("Game already finished");
                 ChipsAccount account =  chips.findByUsername(username);
                 if(account == null){
                     throw new IllegalArgumentException("Chips not found");
                 }
                 account.withdraw((long) game.getBet());
                 game.setBet(game.getBet() * 2);
-                this.hit(game);
-                if (!this.isFinished(game)) {
-                    this.dealerTurn(game);
+                game.hit();
+                if (!game.isFinished()) {
+                    game.stand();
                 }
             }
             default -> throw new IllegalArgumentException("Unknown move: " + move);

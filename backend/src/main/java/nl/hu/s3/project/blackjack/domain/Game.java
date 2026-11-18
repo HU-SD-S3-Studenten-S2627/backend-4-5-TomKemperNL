@@ -143,4 +143,52 @@ public class Game {
     public void setPlayerValue(int playerValue) {
         this.playerValue = playerValue;
     }
+
+
+    public void hit() {
+        makeSureGameIsStillRunning();
+        addPlayerCard(takeCard());
+        if (this.getPlayerValue() > 21) {
+            this.setResult("Bust");
+        }
+    }
+
+    public void stand() {
+        makeSureGameIsStillRunning();
+        int value = 0;
+        for (int card : this.getDealerCards()) {
+            int rank = ((card - 1) % 13) + 1;
+            value += rank == 1 ? 1 : Math.min(rank, 10);
+        }
+
+        // A dealer always stands on a hand value of 17.
+        while (value < 17) {
+            int newCard = takeCard();
+            addDealerCard(newCard);
+            int rank = ((newCard - 1) % 13) + 1;
+            value += rank == 1 ? 1 : Math.min(rank, 10);
+        }
+
+        int playerValue = this.getPlayerValue();
+        int dealerValue = value;
+        if (dealerValue > 21 || playerValue > dealerValue) {
+            this.setResult("Won");
+        }else if (playerValue == dealerValue) {
+            this.setResult("Push");
+        } else {
+            this.setResult("Lost");
+        }
+    }
+
+    private void makeSureGameIsStillRunning() {
+        if (this.isFinished()) {
+            throw new RuntimeException("Game already finished");
+        }
+    }
+
+    public boolean isFinished() {
+        return !PLAYING.equals(this.getResult());
+    }
+
+
 }
