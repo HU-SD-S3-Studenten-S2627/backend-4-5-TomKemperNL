@@ -1,10 +1,6 @@
 package nl.hu.s3.project.blackjack.domain;
 
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import nl.hu.s3.project.blackjack.data.CSVPersister;
 import nl.hu.s3.project.lobby.Player;
 
@@ -24,19 +20,17 @@ public class Game {
     @ManyToOne
     private Player player;
 
-    @Convert(converter = CSVPersister.class)
-    private List<Card> playerCards;
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    private Hand playerCards;
 
-    @Convert(converter = CSVPersister.class)
-    private List<Card> dealerCards;
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    private Hand dealerCards;
 
     @Convert(converter = CSVPersister.class)
     private List<Card> deck;
 
     private int bet;
     private String result;
-
-    private int playerValue;
 
     protected Game() {
     }
@@ -48,12 +42,11 @@ public class Game {
         Collections.shuffle(deck);
 
         this.player = player;
-        this.playerCards = new ArrayList<>();
-        this.dealerCards = new ArrayList<>();
+        this.playerCards = new Hand();
+        this.dealerCards = new Hand();
         this.deck = new ArrayList<>(deck);
         this.setBet(bet);
         this.setResult(PLAYING);
-        this.setPlayerValue(0);
 
         addPlayerCard(takeCard());
         addPlayerCard(takeCard());
@@ -68,8 +61,7 @@ public class Game {
 
 
     private void addPlayerCard(Card card) {
-        this.getPlayerCards().add(card);
-        this.setPlayerValue(this.getPlayerValue() + card.baseValue());
+        this.playerCards.add(card);
     }
 
     private void addDealerCard(Card card) {
@@ -77,7 +69,7 @@ public class Game {
     }
 
     private Card takeCard() {
-        return this.getDeck().removeFirst();
+        return this.deck.removeFirst();
     }
 
 
@@ -89,16 +81,12 @@ public class Game {
         return player;
     }
 
-    public List<Card> getPlayerCards() {
+    public Hand getPlayerCards() {
         return playerCards;
     }
 
-    public List<Card> getDealerCards() {
+    public Hand getDealerCards() {
         return dealerCards;
-    }
-
-    public List<Card> getDeck() {
-        return deck;
     }
 
     public int getBet() {
@@ -118,13 +106,8 @@ public class Game {
     }
 
     public int getPlayerValue() {
-        return playerValue;
+        return this.playerCards.getValue();
     }
-
-    public void setPlayerValue(int playerValue) {
-        this.playerValue = playerValue;
-    }
-
 
     public void hit() {
         makeSureGameIsStillRunning();
@@ -136,20 +119,16 @@ public class Game {
 
     public void stand() {
         makeSureGameIsStillRunning();
-        int value = 0;
-        for (Card card : this.getDealerCards()) {
-            value += card.baseValue();
-        }
+
 
         // A dealer always stands on a hand value of 17.
-        while (value < 17) {
+        while (this.dealerCards.getValue() < 17) {
             Card newCard = takeCard();
             addDealerCard(newCard);
-            value += newCard.baseValue();
         }
 
-        int playerValue = this.getPlayerValue();
-        int dealerValue = value;
+        int playerValue = this.playerCards.getValue();
+        int dealerValue = this.dealerCards.getValue();
         if (dealerValue > 21 || playerValue > dealerValue) {
             this.setResult("Won");
         }else if (playerValue == dealerValue) {

@@ -59,11 +59,11 @@ public class GameService {
     private GameResponse response(Game game) {
         // Translate the internal numeric representation into human-readable card names.
         List<String> player = new ArrayList<>();
-        for (Card card : game.getPlayerCards()) {
+        for (Card card : game.getPlayerCards().getCards()) {
             player.add(cardName(card));
         }
         List<String> dealer = new ArrayList<>();
-        for (Card card : game.getDealerCards()) {
+        for (Card card : game.getDealerCards().getCards()) {
             dealer.add(cardName(card));
         }
         if (!game.isFinished()) {
