@@ -3,13 +3,11 @@ package nl.hu.s3.project.blackjack.application;
 import jakarta.transaction.Transactional;
 import nl.hu.s3.project.blackjack.domain.Game;
 import nl.hu.s3.project.blackjack.data.GameRepository;
-import nl.hu.s3.project.blackjack.presentation.BlackjackController;
 import nl.hu.s3.project.blackjack.presentation.GameResponse;
 import nl.hu.s3.project.chips.ChipsAccount;
 import nl.hu.s3.project.chips.ChipsRepository;
 import nl.hu.s3.project.lobby.Player;
 import nl.hu.s3.project.lobby.PlayerRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -176,7 +174,7 @@ public class GameService {
 
         Player player = this.players.findById(name);
         if(player == null){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Player not found");
+            throw new IllegalArgumentException("Player not found");
         }
 
 
@@ -214,6 +212,9 @@ public class GameService {
             case "DoubleDown" -> {
                 if (this.isFinished(game)) throw new RuntimeException("Game already finished");
                 ChipsAccount account =  chips.findByUsername(username);
+                if(account == null){
+                    throw new IllegalArgumentException("Chips not found");
+                }
                 account.withdraw((long) game.getBet());
                 game.setBet(game.getBet() * 2);
                 this.hit(game);

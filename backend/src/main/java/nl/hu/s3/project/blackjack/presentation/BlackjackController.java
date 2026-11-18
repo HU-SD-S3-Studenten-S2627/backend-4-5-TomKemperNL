@@ -71,7 +71,7 @@ public class BlackjackController {
         if (found == null) {
             return ResponseEntity.notFound().build();
         }
-        if (!gameService.isNew(authentication.getName(), id)){
+        if (!gameService.isNew(authentication.getName(), id)) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
@@ -81,20 +81,24 @@ public class BlackjackController {
 
     @PostMapping("/games")
     public ResponseEntity<EntityModel<GameResponse>> startGame(Authentication authentication,
-                                                                @RequestBody NewGame request) {
+                                                               @RequestBody NewGame request) {
 
-        GameResponse game = gameService.createGame(authentication.getName(), request.bet());
-        chips.withdrawChips(authentication.getName(), (long) request.bet());
+        try {
+            GameResponse game = gameService.createGame(authentication.getName(), request.bet());
+            chips.withdrawChips(authentication.getName(), (long) request.bet());
 
-        URI location = URI.create("/blackjack/games/" + game.id());
-        EntityModel<GameResponse> model = EntityModel.of(game,
-                Link.of(location.toString(), IanaLinkRelations.SELF));
-        return ResponseEntity.created(location).body(model);
+            URI location = URI.create("/blackjack/games/" + game.id());
+            EntityModel<GameResponse> model = EntityModel.of(game,
+                    Link.of(location.toString(), IanaLinkRelations.SELF));
+            return ResponseEntity.created(location).body(model);
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, ex.getMessage());
+        }
     }
 
     @PostMapping("/games/{id}")
     public ResponseEntity<GameResponse> makeMove(Authentication authentication, @PathVariable Long id,
-                                                  @RequestBody String move) {
+                                                 @RequestBody String move) {
         // Step 1: identify the user and retrieve their game.
         String username = authentication.getName();
         GameResponse found = findUsersGame(username, id);
