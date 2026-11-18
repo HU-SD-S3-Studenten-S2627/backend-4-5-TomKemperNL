@@ -5,9 +5,12 @@ import nl.hu.s3.project.blackjack.data.GameRepository;
 import nl.hu.s3.project.blackjack.presentation.BlackjackController;
 import nl.hu.s3.project.blackjack.presentation.GameResponse;
 import nl.hu.s3.project.lobby.Player;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -24,6 +27,20 @@ public class GameService {
     }
 
     public Game createGame(Player player, List<Integer> cards, int bet) {
+        // Construct a standard deck containing all 52 unique card identifiers.
+        List<Integer> deck = new ArrayList<>();
+        for (int card = 1; card <= 52; card++) {
+            deck.add(card);
+        }
+        // Randomize the order to ensure a fair game experience.
+        Collections.shuffle(deck, this.random);
+
+        Player player = this.players.findById(authentication.getName());
+        if(player == null){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Player not found");
+        }
+
+
         Game game = new Game();
         game.setPlayer(player);
         game.setPlayerCards(new ArrayList<>());
@@ -167,4 +184,43 @@ public class GameService {
         return suit + rankName;
     }
 
+    public boolean isNew(String name, Long id) {
+    }
+
+    public void delete(String name, Long id) {
+    }
+
+    public GameResponse createGame(String name, int bet) {
+    }
+
+    public GameResponse makeMove(String username, Long id, String move) {
+
+        Game game = found;
+
+
+        switch (move) {
+            case "Hit" -> gameService.hit(game);
+            case "Stand" -> {
+                gameService.dealerTurn(game);
+            }
+            case "DoubleDown" -> {
+                if (gameService.isFinished(game)) throw new RuntimeException("Game already finished");
+                chips.withdrawChips(username, (long) game.getBet());
+                game.setBet(game.getBet() * 2);
+                gameService.hit(game);
+                if (!gameService.isFinished(game)) {
+                    gameService.dealerTurn(game);
+                }
+            }
+            default -> throw new IllegalArgumentException("Unknown move: " + move);
+        }
+
+        return null;
+    }
+
+    public GameResponse findUsersGame(Long id, String username) {
+    }
+
+    public Object payout(String username, Long id) {
+    }
 }

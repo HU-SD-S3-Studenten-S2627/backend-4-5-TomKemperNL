@@ -24,6 +24,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.net.URI;
 import java.util.*;
 
+import static nl.hu.s3.project.lobby.PlayerController.response;
+
 @RestController
 @RequestMapping("/blackjack")
 @Transactional
@@ -60,46 +62,37 @@ public class BlackjackController {
     @GetMapping("/games/{id}")
     public ResponseEntity<GameResponse> getGame(Authentication authentication, @PathVariable Long id) {
         // Ownership is checked together with the database lookup for additional security.
-        Game found = findUsersGame(authentication.getName(), id);
+        GameResponse found = findUsersGame(authentication.getName(), id);
         if (found == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(response(found));
+        return ResponseEntity.ok(found);
     }
 
     @DeleteMapping("/games/{id}")
     public ResponseEntity<GameResponse> cancelGame(Authentication authentication, @PathVariable Long id) {
         // A game can only be cancelled before the player has performed a move.
-        Game found = findUsersGame(authentication.getName(), id);
-        if (found == null || !gameService.isNew(found)) {
+        GameResponse found = findUsersGame(authentication.getName(), id);
+        if (found == null) {
             return ResponseEntity.notFound().build();
         }
-        GameResponse response = response(found);
-        games.delete(found);
-        return ResponseEntity.ok(response);
+        if (!gameService.isNew(authentication.getName(), id)){
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+
+        gameService.delete(authentication.getName(), id);
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/games")
     public ResponseEntity<EntityModel<GameResponse>> startGame(Authentication authentication,
                                                                 @RequestBody NewGame request) {
-        // Construct a standard deck containing all 52 unique card identifiers.
-        List<Integer> deck = new ArrayList<>();
-        for (int card = 1; card <= 52; card++) {
-            deck.add(card);
-        }
-        // Randomize the order to ensure a fair game experience.
-        Collections.shuffle(deck, this.random);
 
-        Player player = this.players.findById(authentication.getName());
-        if(player == null){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Player not found");
-        }
-
-        Game game = gameService.createGame(player, deck, request.bet());
+        GameResponse game = gameService.createGame(authentication.getName(), request.bet());
         chips.withdrawChips(authentication.getName(), (long) request.bet());
 
-        URI location = URI.create("/blackjack/games/" + game.getId());
-        EntityModel<GameResponse> model = EntityModel.of(response(game),
+        URI location = URI.create("/blackjack/games/" + game.id());
+        EntityModel<GameResponse> model = EntityModel.of(game,
                 Link.of(location.toString(), IanaLinkRelations.SELF));
         return ResponseEntity.created(location).body(model);
     }
@@ -109,40 +102,23 @@ public class BlackjackController {
                                                   @RequestBody String move) {
         // Step 1: identify the user and retrieve their game.
         String username = authentication.getName();
-        Game found = games.findUsersGame(id, username);
+        GameResponse found = findUsersGame(username, id);
         if (found == null) {
             return ResponseEntity.notFound().build();
         }
-        Game game = found;
 
         // Step 2: execute the requested move using the appropriate game operation.
-        switch (move) {
-            case "Hit" -> gameService.hit(game);
-            case "Stand" -> {
-                gameService.dealerTurn(game);
-            }
-            case "DoubleDown" -> {
-                if (gameService.isFinished(game)) throw new RuntimeException("Game already finished");
-                chips.withdrawChips(username, (long) game.getBet());
-                game.setBet(game.getBet() * 2);
-                gameService.hit(game);
-                if (!gameService.isFinished(game)) {
-                    gameService.dealerTurn(game);
-                }
-            }
-            default -> throw new IllegalArgumentException("Unknown move: " + move);
-        }
+        GameResponse responseBody = this.gameService.makeMove(username, id, move);
 
         // Step 3: settle any payout and persist the latest game state.
-        chips.depositChips(username, (long) gameService.payout(game));
+        chips.depositChips(username, (long) gameService.payout(username, id));
 
         // Step 4: return the updated representation to the API consumer.
-        GameResponse responseBody = response(game);
         return ResponseEntity.ok(responseBody);
     }
 
-    private Game findUsersGame(String username, Long id) {
-        return games.findUsersGame(id, username);
+    private GameResponse findUsersGame(String username, Long id) {
+        return gameService.findUsersGame(id, username);
     }
 
 
