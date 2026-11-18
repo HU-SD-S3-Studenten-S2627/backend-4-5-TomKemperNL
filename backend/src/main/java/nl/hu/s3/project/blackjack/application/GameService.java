@@ -1,10 +1,12 @@
 package nl.hu.s3.project.blackjack.application;
 
+import jakarta.transaction.Transactional;
 import nl.hu.s3.project.blackjack.domain.Game;
 import nl.hu.s3.project.blackjack.data.GameRepository;
 import nl.hu.s3.project.blackjack.presentation.BlackjackController;
 import nl.hu.s3.project.blackjack.presentation.GameResponse;
 import nl.hu.s3.project.lobby.Player;
+import nl.hu.s3.project.lobby.PlayerRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -12,8 +14,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 @Service
+@Transactional
 public class GameService {
 
     public static final String PLAYING = "Playing";
@@ -21,49 +25,16 @@ public class GameService {
     public static final String HIDDEN_CARD = "**";
 
     private GameRepository games;
+    private final PlayerRepository players;
 
-    public GameService(GameRepository games) {
+    private Random random = new Random();
+
+    public GameService(GameRepository games, PlayerRepository players) {
         this.games = games;
+        this.players = players;
     }
 
-    public Game createGame(Player player, List<Integer> cards, int bet) {
-        // Construct a standard deck containing all 52 unique card identifiers.
-        List<Integer> deck = new ArrayList<>();
-        for (int card = 1; card <= 52; card++) {
-            deck.add(card);
-        }
-        // Randomize the order to ensure a fair game experience.
-        Collections.shuffle(deck, this.random);
-
-        Player player = this.players.findById(authentication.getName());
-        if(player == null){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Player not found");
-        }
-
-
-        Game game = new Game();
-        game.setPlayer(player);
-        game.setPlayerCards(new ArrayList<>());
-        game.setDealerCards(new ArrayList<>());
-        game.setDeck(new ArrayList<>(cards));
-        game.setBet(bet);
-        game.setResult(PLAYING);
-        game.setPlayerValue(0);
-
-        addPlayerCard(game, takeCard(game));
-        addPlayerCard(game, takeCard(game));
-        addDealerCard(game, takeCard(game));
-        addDealerCard(game, takeCard(game));
-
-        if (game.getPlayerValue() == 21) {
-            game.setResult("Blackjack");
-        }
-
-        this.games.save(game);
-        return game;
-    }
-
-    public void hit(Game game) {
+    private void hit(Game game) {
         makeSureGameIsStillRunning(game);
         addPlayerCard(game, takeCard(game));
         if (game.getPlayerValue() > 21) {
@@ -71,7 +42,7 @@ public class GameService {
         }
     }
 
-    public void dealerTurn(Game game) {
+    private void dealerTurn(Game game) {
         makeSureGameIsStillRunning(game);
         int value = 0;
         for (int card : game.getDealerCards()) {
@@ -98,17 +69,20 @@ public class GameService {
         }
     }
 
-    public int payout(Game game) {
-        return BlackjackController.calculatePayout(game.getResult(), game.getBet());
+    public int payout(String username, Long id) {
+        Game game = this.games.findUsersGame(id, username);
+        return calculatePayout(game.getResult(), game.getBet());
     }
 
-    public boolean isFinished(Game game) {
+    private boolean isFinished(Game game) {
         return !PLAYING.equals(game.getResult());
     }
 
-    public boolean isNew(Game game) {
+    public boolean isNew(String name, Long id) {
+        Game game = this.games.findUsersGame(id, name);
         return game.getPlayerCards().size() == 2 && PLAYING.equals(game.getResult());
     }
+
 
     private void makeSureGameIsStillRunning(Game game) {
         if (isFinished(game)) {
@@ -184,32 +158,62 @@ public class GameService {
         return suit + rankName;
     }
 
-    public boolean isNew(String name, Long id) {
-    }
-
     public void delete(String name, Long id) {
     }
 
     public GameResponse createGame(String name, int bet) {
+        // Construct a standard deck containing all 52 unique card identifiers.
+        List<Integer> deck = new ArrayList<>();
+        for (int card = 1; card <= 52; card++) {
+            deck.add(card);
+        }
+        // Randomize the order to ensure a fair game experience.
+        Collections.shuffle(deck, this.random);
+
+        Player player = this.players.findById(name);
+        if(player == null){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Player not found");
+        }
+
+
+        Game game = new Game();
+        game.setPlayer(player);
+        game.setPlayerCards(new ArrayList<>());
+        game.setDealerCards(new ArrayList<>());
+        game.setDeck(new ArrayList<>(deck));
+        game.setBet(bet);
+        game.setResult(PLAYING);
+        game.setPlayerValue(0);
+
+        addPlayerCard(game, takeCard(game));
+        addPlayerCard(game, takeCard(game));
+        addDealerCard(game, takeCard(game));
+        addDealerCard(game, takeCard(game));
+
+        if (game.getPlayerValue() == 21) {
+            game.setResult("Blackjack");
+        }
+
+        this.games.save(game);
+        return response(game);
     }
 
     public GameResponse makeMove(String username, Long id, String move) {
 
-        Game game = found;
-
+        Game game = this.games.findUsersGame(id, username);
 
         switch (move) {
-            case "Hit" -> gameService.hit(game);
+            case "Hit" -> this.hit(game);
             case "Stand" -> {
-                gameService.dealerTurn(game);
+                this.dealerTurn(game);
             }
             case "DoubleDown" -> {
-                if (gameService.isFinished(game)) throw new RuntimeException("Game already finished");
+                if (this.isFinished(game)) throw new RuntimeException("Game already finished");
                 chips.withdrawChips(username, (long) game.getBet());
                 game.setBet(game.getBet() * 2);
-                gameService.hit(game);
-                if (!gameService.isFinished(game)) {
-                    gameService.dealerTurn(game);
+                this.hit(game);
+                if (!this.isFinished(game)) {
+                    this.dealerTurn(game);
                 }
             }
             default -> throw new IllegalArgumentException("Unknown move: " + move);
@@ -218,9 +222,29 @@ public class GameService {
         return null;
     }
 
-    public GameResponse findUsersGame(Long id, String username) {
+
+    public GameResponse findUsersGame(String username, Long id) {
+        return response(this.games.findUsersGame(id, username));
     }
 
-    public Object payout(String username, Long id) {
+
+
+    public Random getRandom() {
+        return random;
+    }
+
+    public void setRandom(Random random) {
+        this.random = random;
+    }
+
+    private static int calculatePayout(String result, int bet) {
+        // Apply the standard payout multiplier for each possible result.
+        return switch (result) {
+            case "Surrendered" -> bet / 2;
+            case "Push" -> bet;
+            case "Blackjack" -> (int) (bet * 1.5);
+            case "Won" -> bet * 2;
+            default -> 0;
+        };
     }
 }

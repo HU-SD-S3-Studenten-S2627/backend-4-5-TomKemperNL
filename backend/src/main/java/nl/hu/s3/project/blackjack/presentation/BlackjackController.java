@@ -28,7 +28,6 @@ import static nl.hu.s3.project.lobby.PlayerController.response;
 
 @RestController
 @RequestMapping("/blackjack")
-@Transactional
 /**
  * Main REST controller for the Blackjack feature.
  * <p>
@@ -38,14 +37,10 @@ import static nl.hu.s3.project.lobby.PlayerController.response;
 public class BlackjackController {
 
     private final GameService gameService;
-    private final PlayerRepository players;
     private final ChipsController chips;
 
-    private Random random = new Random();
-
-    public BlackjackController(GameService gameService, PlayerRepository players, ChipsController chips) {
+    public BlackjackController(GameService gameService, ChipsController chips) {
         this.gameService = gameService;
-        this.players = players;
         this.chips = chips;
     }
 
@@ -118,26 +113,7 @@ public class BlackjackController {
     }
 
     private GameResponse findUsersGame(String username, Long id) {
-        return gameService.findUsersGame(id, username);
+        return gameService.findUsersGame(username, id);
     }
 
-
-    public static int calculatePayout(String result, int bet) {
-        // Apply the standard payout multiplier for each possible result.
-        return switch (result) {
-            case "Surrendered" -> bet / 2;
-            case "Push" -> bet;
-            case "Blackjack" -> (int) (bet * 1.5);
-            case "Won" -> bet * 2;
-            default -> 0;
-        };
-    }
-
-    public Random getRandom() {
-        return random;
-    }
-
-    public void setRandom(Random random) {
-        this.random = random;
-    }
 }
