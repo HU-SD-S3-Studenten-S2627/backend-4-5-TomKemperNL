@@ -37,8 +37,18 @@ public class Hand {
 
     public int getValue() {
         int total = 0;
+        int nrOfAces = 0;
         for(Card c : this.cards){
             total += c.baseValue();
+            if(c.getRank().equals(Rank.Ace)){
+                nrOfAces++;
+            }
+        }
+
+        for(int i = 0; i<nrOfAces; i++){
+            if(total > 21){
+                total -= 10;
+            }
         }
 
         return total;
