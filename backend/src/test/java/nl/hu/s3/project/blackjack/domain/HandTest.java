@@ -19,4 +19,26 @@ class HandTest {
         Hand hand = new Hand(List.of(new Card(Suit.Diamonds, Rank.Four), new Card(Suit.Clubs, Rank.Ace)));
         assertEquals(15, hand.getValue());
     }
+
+    @Test
+    public void lowAce() {
+        Hand hand = new Hand(List.of(new Card(Suit.Diamonds, Rank.Four), new Card(Suit.Spades, Rank.King),
+                new Card(Suit.Clubs, Rank.Ace)));
+        assertEquals(15, hand.getValue());
+    }
+
+    @Test
+    public void multipleLowAce() {
+        Hand hand = new Hand(List.of(new Card(Suit.Diamonds, Rank.Four), new Card(Suit.Spades, Rank.King),
+                new Card(Suit.Clubs, Rank.Ace), new Card(Suit.Hearts, Rank.Ace)));
+        assertEquals(16, hand.getValue());
+    }
+
+    @Test
+    public void mixedHighLowAce() {
+        Hand hand = new Hand(List.of(new Card(Suit.Diamonds, Rank.Four), new Card(Suit.Spades, Rank.Two),
+                new Card(Suit.Clubs, Rank.Ace), new Card(Suit.Hearts, Rank.Ace)));
+        assertEquals(18, hand.getValue());
+    }
+
 }
