@@ -20,6 +20,13 @@ public class Hand {
     @Convert(converter = CSVPersister.class)
     private List<Card> cards = new ArrayList<>();
 
+    public Hand(){}
+
+    public Hand(List<Card> cards){
+        this();
+        this.cards.addAll(cards);
+    }
+
     public List<Card> getCards() {
         return Collections.unmodifiableList(cards);
     }
