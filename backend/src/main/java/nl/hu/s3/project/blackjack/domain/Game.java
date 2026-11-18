@@ -191,4 +191,12 @@ public class Game {
     }
 
 
+    public void doubleDown() {
+        if (this.isFinished()) throw new RuntimeException("Game already finished");
+        this.setBet(this.getBet() * 2);
+        this.hit();
+        if (!this.isFinished()) {
+            this.stand();
+        }
+    }
 }

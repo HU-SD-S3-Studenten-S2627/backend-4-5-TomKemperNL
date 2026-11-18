@@ -126,17 +126,13 @@ public class GameService {
                 game.stand();
             }
             case "DoubleDown" -> {
-                if (game.isFinished()) throw new RuntimeException("Game already finished");
                 ChipsAccount account =  chips.findByUsername(username);
                 if(account == null){
                     throw new IllegalArgumentException("Chips not found");
                 }
                 account.withdraw((long) game.getBet());
-                game.setBet(game.getBet() * 2);
-                game.hit();
-                if (!game.isFinished()) {
-                    game.stand();
-                }
+
+                game.doubleDown();
             }
             default -> throw new IllegalArgumentException("Unknown move: " + move);
         }
