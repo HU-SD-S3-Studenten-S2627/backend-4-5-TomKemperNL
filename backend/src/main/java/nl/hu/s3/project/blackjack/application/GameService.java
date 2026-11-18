@@ -1,5 +1,8 @@
-package nl.hu.s3.project.blackjack;
+package nl.hu.s3.project.blackjack.application;
 
+import nl.hu.s3.project.blackjack.domain.Game;
+import nl.hu.s3.project.blackjack.data.GameRepository;
+import nl.hu.s3.project.blackjack.presentation.BlackjackController;
 import nl.hu.s3.project.lobby.Player;
 import org.springframework.stereotype.Service;
 

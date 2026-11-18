@@ -1,4 +1,6 @@
-package nl.hu.s3.project.blackjack;
+package nl.hu.s3.project.blackjack.data;
+
+import nl.hu.s3.project.blackjack.domain.Game;
 
 import java.util.List;
 

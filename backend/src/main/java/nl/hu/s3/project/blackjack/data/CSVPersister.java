@@ -1,4 +1,4 @@
-package nl.hu.s3.project.blackjack;
+package nl.hu.s3.project.blackjack.data;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;

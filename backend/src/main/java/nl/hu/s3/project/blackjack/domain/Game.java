@@ -1,11 +1,11 @@
-package nl.hu.s3.project.blackjack;
+package nl.hu.s3.project.blackjack.domain;
 
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Transient;
+import nl.hu.s3.project.blackjack.data.CSVPersister;
 import nl.hu.s3.project.lobby.Player;
 
 import java.util.List;

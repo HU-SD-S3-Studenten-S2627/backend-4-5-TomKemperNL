@@ -1,6 +1,7 @@
-package nl.hu.s3.project.blackjack;
+package nl.hu.s3.project.blackjack.data;
 
 import jakarta.persistence.EntityManager;
+import nl.hu.s3.project.blackjack.domain.Game;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

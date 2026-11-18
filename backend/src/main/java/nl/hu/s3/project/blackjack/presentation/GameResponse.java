@@ -1,4 +1,4 @@
-package nl.hu.s3.project.blackjack;
+package nl.hu.s3.project.blackjack.presentation;
 
 import java.util.List;
 

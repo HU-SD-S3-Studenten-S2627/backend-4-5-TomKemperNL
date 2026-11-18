@@ -1,4 +1,4 @@
-package nl.hu.s3.project.blackjack;
+package nl.hu.s3.project.blackjack.presentation;
 
 /**
  * Request object containing the information required to start a new Blackjack game.

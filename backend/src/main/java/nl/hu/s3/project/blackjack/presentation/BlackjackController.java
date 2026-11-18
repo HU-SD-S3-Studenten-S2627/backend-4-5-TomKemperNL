@@ -1,6 +1,9 @@
-package nl.hu.s3.project.blackjack;
+package nl.hu.s3.project.blackjack.presentation;
 
 import jakarta.transaction.Transactional;
+import nl.hu.s3.project.blackjack.application.GameService;
+import nl.hu.s3.project.blackjack.data.GameRepository;
+import nl.hu.s3.project.blackjack.domain.Game;
 import nl.hu.s3.project.chips.ChipsController;
 import nl.hu.s3.project.lobby.Player;
 import nl.hu.s3.project.lobby.PlayerRepository;
@@ -18,7 +21,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.*;
